@@ -1,0 +1,34 @@
+{# The sidebar: what the numbers on the page are, and where they came from.
+
+   Every page includes this, because every page is drawn from the same summary.
+   The sample notice is the honest part: these aggregates come from one game
+   until the Supabase tables land. #}
+<label class="side-label">Dataset</label>
+<div class="side-facts">
+  <div class="side-fact stack"><span class="k">Game</span><span class="v">{{ meta.game_id }}</span></div>
+  <div class="side-fact"><span class="k">Frames</span><span class="v">{{ "{:,}".format(meta.frames) }}</span></div>
+  <div class="side-fact"><span class="k">Player rows</span><span class="v">{{ "{:,}".format(meta.player_frames) }}</span></div>
+  <div class="side-fact"><span class="k">Players</span><span class="v">{{ meta.players }}</span></div>
+  <div class="side-fact"><span class="k">Source</span><span class="v">{{ "sample" if summary.is_sample else "database" }}</span></div>
+  <div class="side-fact"><span class="k">Built</span><span class="v">{{ summary.modified }}</span></div>
+</div>
+
+{% if summary.is_sample %}
+<div class="side-divider"></div>
+<div class="banner-note">
+  Sample: one game, every period. The tables move to Supabase next, and these
+  pages switch over without changing.
+</div>
+{% endif %}
+
+<div class="side-divider"></div>
+<a class="dd-btn side-link" href="{{ url_for('download_summary') }}">
+  <span>Aggregates</span><span class="side-link-size">json</span>
+</a>
+
+{% if gated %}
+<div class="side-divider"></div>
+<form method="POST" action="{{ url_for('lock') }}">
+  <button class="dd-btn" type="submit" style="justify-content:center;">Lock this page</button>
+</form>
+{% endif %}

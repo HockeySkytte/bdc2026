@@ -1,0 +1,509 @@
+/* Styles for the app.
+ *
+ * A compact dark dashboard theme: a 260px sidebar with an accent gradient, a
+ * sticky tab row, panels, tables and rink maps.  The accent colour is injected
+ * at runtime from config.py, so nothing here hardcodes a team colour.
+ */
+
+:root{
+  --bg:#0d0f16;
+  --panel:#141826;
+  --panel-alt:#1c2233;
+  --text:#e6e8ec;
+  --text-dim:#9aa4b1;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background:linear-gradient(160deg,#05060a,#0f121a);
+  color:var(--text);
+}
+
+.app-shell{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  min-height:100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar{
+  padding:18px 14px 18px;
+  border-right:1px solid rgba(255,255,255,0.10);
+  overflow:auto;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 75%, #000) 0%,
+      color-mix(in srgb, var(--accent) 30%, #000) 55%,
+      rgba(13, 15, 22, 0.90) 100%
+    );
+}
+
+.side-hdr{ display:flex; align-items:center; }
+/* The mark and the wordmark sit a little closer to the edge than everything
+   below them does, which reads better against the sidebar's rounded corner. */
+.side-hdr .hdr-left{ display:flex; gap:10px; align-items:center; margin-left:-8px; }
+.hdr-titles{ display:flex; flex-direction:column; }
+.logo{ height:74px; width:auto; filter:drop-shadow(0 0 6px #000); }
+.app-title{ font-size:28px; font-weight:950; letter-spacing:.1px; }
+.app-title > div{ line-height:1.05; }
+.side-divider{ height:1px; background:rgba(255,255,255,0.18); margin:14px 0; }
+
+/* The two hamburger buttons, and the menu the first one opens.  Both are hidden
+   on a wide screen, where the tab strip and the sidebar do the job instead. */
+.hdr-actions{ display:none; gap:8px; margin-left:auto; }
+.icon-btn{
+  width:40px; height:40px; border-radius:12px; border:none;
+  background:var(--panel-alt); color:var(--text);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover{ background:rgba(255,255,255,0.12); }
+.icon-btn .icon{ width:20px; height:20px; }
+.mobile-menu{ display:none; }
+
+.side-selectors{ display:flex; flex-direction:column; gap:8px; }
+.side-label{
+  font-size:11px; font-weight:900; letter-spacing:.9px; text-transform:uppercase;
+  color:rgba(255,255,255,0.88);
+}
+
+/* Read-only key/value rows used for the dataset facts in the sidebar. */
+.side-facts{ display:flex; flex-direction:column; gap:6px; }
+.side-fact{ display:flex; justify-content:space-between; gap:10px; font-size:12px; }
+.side-fact .k{ color:rgba(255,255,255,0.62); font-weight:700; flex:0 0 auto; }
+/* Long values (the CSV filename) must wrap inside the 260px rail rather than
+   pushing the sidebar wider. */
+.side-fact .v{ font-weight:800; min-width:0; text-align:right; overflow-wrap:anywhere; }
+/* A value too long to sit beside its label gets its own line instead of
+   breaking mid-word. */
+.side-fact.stack{ flex-direction:column; align-items:flex-start; gap:2px; }
+.side-fact.stack .v{ text-align:left; font-size:11px; }
+
+/* ── Sidebar button ──────────────────────────────────────── */
+/* Worn by the Lock button and the Reset link.  The slicers themselves are
+   native <select> elements, styled further down. */
+.dd-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.22);
+  background:var(--panel-alt);
+  color:var(--text);
+  padding:9px 12px;
+  font-weight:800;
+  font-size:12px;
+  cursor:pointer;
+}
+.dd-btn:focus{ outline:2px solid rgba(255,255,255,0.18); outline-offset:2px; }
+
+/* ── Main column ─────────────────────────────────────────── */
+.main-col{ min-width:0; }
+
+.tabs{
+  display:flex;
+  gap:28px;
+  padding:0 34px;
+  height:46px;
+  align-items:flex-end;
+  border-bottom:1px solid #1f2734;
+  background:#0e121b;
+  position:sticky;
+  top:0;
+  z-index:20;
+  /* Seven pages is wide enough to run out of room on a laptop, so the strip
+     scrolls rather than squashing or wrapping.  The bar itself is hidden - it
+     would eat into the 46px height and the tabs are discoverable by scrolling. */
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{ display:none; }
+.tabs a{ flex:0 0 auto; }
+.tabs a{
+  position:relative;
+  top:10px;
+  padding:12px 6px 18px;
+  font-size:15px;
+  font-weight:650;
+  color:var(--text-dim);
+  text-decoration:none;
+  letter-spacing:.6px;
+}
+.tabs a.active, .tabs a:hover{ color:var(--text); }
+.tabs a.active::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:10px;
+  height:4px;
+  border-radius:4px;
+  background:var(--accent);
+  box-shadow:0 0 8px -1px var(--accent);
+}
+
+main{ padding:26px 42px 24px; min-width:0; }
+
+.page-hdr{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:24px; }
+.page-title{ font-size:32px; font-weight:900; letter-spacing:.2px; }
+.page-sub{ color:var(--text-dim); font-size:13px; font-weight:650; }
+
+/* ── Panels, tables, buttons ─────────────────────────────── */
+.panel{
+  background:rgba(255,255,255,0.02);
+  border:1px solid #232a3a;
+  border-radius:14px;
+  padding:14px;
+  overflow:auto;
+}
+
+.table{ width:100%; border-collapse:collapse; font-size:14px; }
+.table th{
+  position:sticky;
+  top:0;
+  background:#0f1522;
+  text-align:center;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  padding:10px 10px;
+  color:var(--text-dim);
+  font-weight:900;
+  border-bottom:1px solid #222b37;
+}
+.table td{ padding:10px 10px; border-bottom:1px solid #1a2230; text-align:center; white-space:nowrap; }
+.table td.left, .table th.left{ text-align:left; }
+
+.btn{
+  background:var(--panel-alt);
+  border:1px solid #2a3142;
+  color:var(--text);
+  padding:8px 12px;
+  border-radius:10px;
+  font-weight:750;
+  cursor:pointer;
+  font-size:13px;
+}
+.btn:hover{ background:rgba(255,255,255,0.05); }
+
+/* ── Notes / flash ───────────────────────────────────────── */
+.note{ color:var(--text-dim); font-size:12px; line-height:1.6; margin-top:16px; }
+.note code{
+  background:rgba(255,255,255,0.06); border-radius:5px; padding:1px 5px;
+  font-size:11px; color:rgba(255,255,255,0.85);
+}
+.flash{
+  margin-top:14px; padding:12px 14px; border-radius:10px; font-size:13px; font-weight:600;
+}
+.flash-danger{ background:rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.4); color:#fca5a5; }
+.flash-info{
+  background:color-mix(in srgb, var(--accent) 18%, transparent);
+  border:1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color:#f4f7fb;
+}
+
+/* ── Password gate ───────────────────────────────────────── */
+.gate-shell{
+  display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px;
+}
+.auth-card{
+  background:var(--panel); border:1px solid rgba(255,255,255,0.10);
+  border-radius:18px; padding:40px 36px; width:380px; max-width:92vw;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.auth-logo{ display:flex; align-items:center; gap:14px; margin-bottom:28px; justify-content:center; }
+.auth-logo img{ height:64px; filter:drop-shadow(0 0 6px #000); }
+.auth-logo span{ font-size:22px; font-weight:900; line-height:1.1; }
+.auth-card h2{ margin:0 0 20px; font-size:18px; font-weight:700; text-align:center; }
+.auth-card label{
+  display:block; font-size:11px; font-weight:800; letter-spacing:.8px;
+  text-transform:uppercase; color:rgba(255,255,255,.75); margin-bottom:6px;
+}
+.auth-card input[type="password"]{
+  width:100%; padding:10px 14px; border-radius:12px;
+  border:1px solid rgba(255,255,255,0.18); background:var(--panel-alt);
+  color:var(--text); font-size:14px; font-weight:500; margin-bottom:14px;
+  outline:none;
+}
+.auth-card input:focus{ border-color:var(--accent); }
+.auth-card .btn{ width:100%; padding:12px; border:none; border-radius:12px; background:var(--accent); color:#fff; font-size:14px; font-weight:700; }
+.auth-card .btn:hover{ filter:brightness(1.15); }
+.auth-note{ text-align:center; margin-top:18px; font-size:12px; color:var(--text-dim); line-height:1.5; }
+
+/* ── Side panel slicers ──────────────────────────────────── */
+.slicers{ display:flex; flex-direction:column; gap:8px; }
+
+/* A native <select> wearing the app's button styling.  appearance:none takes
+   the platform arrow away, so it is drawn back in as a background image. */
+.side-select{
+  width:100%;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.22);
+  background-color:var(--panel-alt);
+  color:var(--text);
+  padding:9px 30px 9px 12px;
+  font-weight:800;
+  font-size:12px;
+  font-family:inherit;
+  cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239aa4b1' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 11px center;
+  background-size:11px 7px;
+}
+.side-select:hover:not(:focus){ background-color:rgba(255,255,255,0.06); }
+.side-select:focus{ outline:2px solid rgba(255,255,255,0.18); outline-offset:2px; }
+
+/* The open list takes its colours from the select, so the options are pinned
+   dark.  Without this, hovering a select that is already open lightens the
+   background and the open list goes light with it. */
+.side-select option{
+  background-color:var(--panel-alt);
+  color:var(--text);
+}
+
+.slicer-reset{ justify-content:center; text-decoration:none; }
+
+/* Download links in the side panel, wearing the same button styling. */
+.side-links{ display:flex; flex-direction:column; gap:8px; }
+.side-link{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  text-decoration:none;
+}
+.side-link-size{ font-size:10px; font-weight:700; opacity:0.6; }
+
+/* ── Rink maps ───────────────────────────────────────────── */
+/* No frame around the rink itself - the picture is the frame. */
+.rink-wrap{ display:block; }
+
+.rink-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:10px;
+  background:#0b0e14;
+}
+
+/* Zone labels above the rink.  The widths are the rink's own proportions - each
+   end zone is 75 of the 200 feet and the neutral zone the middle 50 - so each
+   label sits over the zone it names.  The SVG keeps the 200x85 aspect ratio, so
+   these line up with it. */
+.rink-zone-labels{
+  display:flex;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.9px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+}
+.rink-zone-labels span{ text-align:center; }
+.rink-zone-labels .rz-dz{ flex:0 0 37.5%; }
+.rink-zone-labels .rz-nz{ flex:0 0 25%; }
+.rink-zone-labels .rz-oz{ flex:0 0 37.5%; }
+
+/* Arrows: passes run from where the puck was let go to where it was aimed.
+   Strokes are in viewBox units, so they scale with the rink.  The low opacity
+   is deliberate - a few hundred passes on one rink read better as a density
+   than as a solid block of lines. */
+.ev-arrow{
+  stroke-width:0.35;
+  stroke-linecap:round;
+  opacity:0.45;
+}
+.ev-arrow:hover{ opacity:1; stroke-width:0.6; }
+
+.ev-shot{
+  fill:#2563eb;
+  stroke:#ffffff;
+  stroke-width:0.22;
+}
+.ev-dot{
+  fill:#111111;
+  opacity:0.5;
+}
+
+/* No frame around the legend.  Each swatch carries its own light chip instead,
+   which is what makes the black "Other events" circle - and the red
+   "Incomplete Play" arrow - readable against the dark page. */
+.rink-legend{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  margin-top:14px;
+  color:var(--text);
+  font-size:12px;
+  font-weight:700;
+}
+.rink-legend span{ display:flex; align-items:center; gap:6px; }
+.rink-legend .lg{
+  width:30px;
+  height:16px;
+  flex:0 0 auto;
+  padding:1px 3px;
+  box-sizing:border-box;
+  border-radius:4px;
+  background:#eef1f6;
+}
+
+/* Heat map: one filled box per zone, with its count in the middle. */
+.hm-box{ stroke:rgba(255,255,255,0.35); stroke-width:0.25; }
+.hm-label{
+  font-size:2.4px;
+  font-weight:700;
+  fill:#000000;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  pointer-events:none;
+}
+
+/* ── Data Cleaning page ──────────────────────────────────── */
+.steps{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  max-width:920px;
+}
+.steps > li{
+  border-left:3px solid var(--accent);
+  padding:2px 0 2px 18px;
+}
+.step-title{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:0.2px;
+  margin-bottom:8px;
+}
+.step-title .step-num{
+  display:inline-block;
+  min-width:22px;
+  color:var(--accent);
+  font-weight:900;
+}
+.step-body{
+  margin:0 0 8px;
+  color:var(--text-dim);
+  font-size:13px;
+  line-height:1.65;
+}
+.step-body:last-child{ margin-bottom:0; }
+
+/* The bullet lists sit beside the paragraphs rather than inside them, so they
+   need their bullets putting back - list-style is inherited, and the list above
+   turns it off. */
+.steps ul{
+  list-style:disc;
+  margin:0 0 8px;
+  padding-left:22px;
+}
+.steps ul li{
+  margin-bottom:5px;
+  color:var(--text-dim);
+  font-size:13px;
+  line-height:1.65;
+}
+.steps code{
+  background:rgba(255,255,255,0.07);
+  border-radius:5px;
+  padding:1px 5px;
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+}
+
+/* ── xG Models page ──────────────────────────────────────── */
+.section-title{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:0.9px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin:26px 0 10px;
+}
+.section-title:first-of-type{ margin-top:20px; }
+
+.prose{
+  margin:0 0 12px;
+  color:var(--text-dim);
+  font-size:13px;
+  line-height:1.65;
+  max-width:920px;
+}
+.prose code, .panel code{
+  background:rgba(255,255,255,0.07);
+  border-radius:5px;
+  padding:1px 5px;
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+}
+
+/* Coefficient signs: negative cools towards red, positive towards blue. */
+.coef-neg{ color:#f87171; font-weight:800; }
+.coef-pos{ color:#60a5fa; font-weight:800; }
+
+/* ── Possession Values page ──────────────────────────────── */
+.pv-label{ font-size:2.1px; font-weight:900; }
+.pv-scale{ display:flex; align-items:center; gap:6px; }
+.pv-swatch{
+  width:26px;
+  height:14px;
+  border-radius:3px;
+  border:1px solid rgba(255,255,255,0.14);
+}
+.prose-list{
+  margin:0 0 12px;
+  padding-left:22px;
+  max-width:920px;
+  color:var(--text-dim);
+  font-size:13px;
+  line-height:1.65;
+}
+.prose-list li{ margin-bottom:8px; }
+.prose-list strong{ color:var(--text); }
+.prose-list code{
+  background:rgba(255,255,255,0.07);
+  border-radius:5px;
+  padding:1px 5px;
+  font-size:12px;
+  color:rgba(255,255,255,0.9);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+/* Below 900px the sidebar becomes a top block, the tab strip gives way to a
+   menu, and the slicers fold away.  Which of those the two header buttons
+   control is decided here, not in the script. */
+@media (max-width: 900px){
+  .app-shell{ grid-template-columns:1fr; }
+  .sidebar{ border-right:0; border-bottom:1px solid rgba(255,255,255,0.10); }
+  main{ padding:18px 16px 24px; }
+  .tabs{ display:none; }
+  .page-title{ font-size:26px; }
+
+  .hdr-actions{ display:flex; }
+  .side-hdr .hdr-left{ margin-left:-4px; }
+
+  .mobile-menu{ display:flex; flex-direction:column; gap:4px; padding:8px 0; }
+  .mobile-menu[hidden]{ display:none; }
+  .mobile-menu a{
+    display:block; padding:9px 12px; border-radius:10px;
+    color:var(--text); text-decoration:none; font-size:14px; font-weight:700;
+  }
+  .mobile-menu a:hover{ background:rgba(255,255,255,0.06); }
+  .mobile-menu a.active{ background:#2a3142; }
+
+  /* The slicers close when the filters button says so.  A class rather than the
+     `hidden` attribute, because .side-selectors sets its own display and would
+     win against the browser's default [hidden] rule. */
+  body.filters-collapsed .side-selectors{ display:none; }
+}

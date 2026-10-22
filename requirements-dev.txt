@@ -1,0 +1,6 @@
+# Only needed to regenerate the sample summary: build_sample.py reads the raw
+# tracking files with pandas.  The site itself does not import either package, so
+# these are kept out of requirements.txt and never installed on a deploy.
+-r requirements.txt
+pandas>=2.2,<4
+numpy>=1.26

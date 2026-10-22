@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.log
+
+# The aggregates the pages are drawn from ARE committed on purpose: it keeps a
+# clone runnable and the deployed site reproducible without the raw tracking
+# files, which are far too big for a repository.
+#
+# The raw files stay where they are, outside this repo, and build_sample.py reads
+# them from ../data/bigdata_cup_2026.

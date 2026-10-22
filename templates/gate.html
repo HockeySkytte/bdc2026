@@ -1,0 +1,44 @@
+{# Password gate.
+
+   Standalone by design: it shares the app's card styling and branding but none
+   of the app shell, and it has no link back into the app.  Only reachable when
+   APP_PASSWORD is set - see auth.py. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Restricted &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ config.favicon_url }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='tracking.css') }}?v=1" />
+  <style>:root { --accent: {{ config.accent }}; }</style>
+</head>
+<body>
+  <div class="gate-shell">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="{{ config.logo_url }}"
+             alt="{{ config.app_title_top }} {{ config.app_title_bottom }}" />
+        <span>{{ config.app_title_top }}<br />{{ config.app_title_bottom }}</span>
+      </div>
+      <h2>Restricted</h2>
+
+      {% if error %}
+      <div class="flash flash-danger">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('unlock') }}">
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" required autofocus />
+        <button class="btn" type="submit">Unlock</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

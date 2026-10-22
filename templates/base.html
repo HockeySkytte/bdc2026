@@ -1,0 +1,128 @@
+{# App shell: sidebar, sticky tab row, and the main content area.
+
+   The same shell the event app uses, so the two sites read as one product.  On a
+   wide screen the pages are a tab strip across the top and the dataset facts sit
+   in the sidebar.  Below 900px the strip is replaced by a menu behind the
+   hamburger button, and the sidebar folds away behind the filters button. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{{ page_title }}{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ config.favicon_url }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='tracking.css') }}?v=1" />
+  <style>
+    :root { --accent: {{ config.accent }}; }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <header class="side-hdr">
+        <div class="hdr-left">
+          <img class="logo" src="{{ config.logo_url }}"
+               alt="{{ config.app_title_top }} {{ config.app_title_bottom }}" />
+          <div class="hdr-titles">
+            <div class="app-title">
+              <div>{{ config.app_title_top }}</div>
+              <div>{{ config.app_title_bottom }}</div>
+            </div>
+            <div class="app-note">{{ config.app_title_note }}</div>
+          </div>
+        </div>
+
+        {# Only shown on a narrow screen. #}
+        <div class="hdr-actions">
+          <button id="btnMobileMenu" class="icon-btn" type="button"
+                  aria-label="Pages" aria-expanded="false" aria-controls="mobileMenuPanel">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+          </button>
+          <button id="btnMobileFilters" class="icon-btn" type="button"
+                  aria-label="Dataset" aria-expanded="true" aria-controls="side-selectors">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <nav id="mobileMenuPanel" class="mobile-menu" hidden>
+        {% include "_nav.html" %}
+      </nav>
+
+      <div class="side-divider"></div>
+
+      <div class="side-selectors" id="side-selectors">
+        {% block sidebar %}{% include "_dataset_facts.html" %}{% endblock %}
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <nav class="tabs">
+        {% block top_nav %}{% include "_nav.html" %}{% endblock %}
+      </nav>
+      <main>
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // The hamburger buttons only exist below 900px, and the stylesheet is what
+      // actually hides the panels - these handlers only keep the buttons and the
+      // panels in step with each other.
+      var narrow = function () { return window.matchMedia('(max-width: 900px)').matches; };
+      var btnMenu = document.getElementById('btnMobileMenu');
+      var btnFilters = document.getElementById('btnMobileFilters');
+      var menuPanel = document.getElementById('mobileMenuPanel');
+
+      function setMenuOpen(open) {
+        if (!menuPanel || !btnMenu) return;
+        menuPanel.hidden = !open;
+        btnMenu.setAttribute('aria-expanded', String(open));
+      }
+
+      function setFiltersCollapsed(collapsed) {
+        document.body.classList.toggle('filters-collapsed', collapsed);
+        if (btnFilters) btnFilters.setAttribute('aria-expanded', String(!collapsed));
+        localStorage.setItem('filtersCollapsed', collapsed ? '1' : '0');
+      }
+
+      if (btnMenu) {
+        btnMenu.addEventListener('click', function (event) {
+          event.stopPropagation();
+          setMenuOpen(menuPanel.hidden);
+        });
+      }
+
+      if (btnFilters) {
+        btnFilters.addEventListener('click', function (event) {
+          event.stopPropagation();
+          setFiltersCollapsed(!document.body.classList.contains('filters-collapsed'));
+        });
+      }
+
+      // A click anywhere else closes the page menu.
+      document.addEventListener('click', function (event) {
+        if (!menuPanel || menuPanel.hidden) return;
+        if (btnMenu && btnMenu.contains(event.target)) return;
+        if (menuPanel.contains(event.target)) return;
+        setMenuOpen(false);
+      });
+
+      // Narrow screens start with the sidebar folded away, and remember what the
+      // visitor chose last time.
+      if (narrow()) {
+        setFiltersCollapsed(localStorage.getItem('filtersCollapsed') !== '0');
+      }
+    })();
+  </script>
+</body>
+</html>

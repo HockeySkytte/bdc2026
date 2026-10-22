@@ -1,0 +1,13 @@
+# Railway configuration.
+#
+# Railpack auto-detects Python from requirements.txt, so there is no build
+# override here.  The start command runs the app under gunicorn, and Railway's
+# healthcheck hits /healthz, which reports the app and the data together: it
+# answers 503 rather than 200 if the aggregates cannot be read.
+
+[deploy]
+startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+healthcheckPath = "/healthz"
+healthcheckTimeout = 100

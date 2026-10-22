@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Situations &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Situations</div>
+    <div class="page-sub">Possession split by the state of the game</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">Who had the puck at each strength state</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th class="left">Strength</th>
+        <th>Frames</th>
+        <th>Frames with a holder</th>
+        <th class="left">{{ meta.home_team }} share</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="left"><strong>{{ row.strength }}</strong></td>
+        <td>{{ "{:,}".format(row.frames) }}</td>
+        <td>{{ "{:,}".format(row.possessed_frames) }}</td>
+        <td class="left" style="min-width:180px;">
+          <div class="bar-top">
+            <span class="bar-value">{{ "{:.0%}".format(row.home_share) }}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ (row.home_share * 100)|round(1) }}%"></div></div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="note">
+    Strength is written from the home team's point of view, so <code>5v4</code>
+    is a power play for {{ meta.home_team }} and <code>4v5</code> is one for
+    {{ meta.away_team }}. The bar is {{ meta.home_team }}'s share of the frames
+    where somebody held the puck at that strength.
+  </p>
+</div>
+
+<div class="panel-grid">
+  <section class="panel">
+    <div class="panel-title">What the numbers say</div>
+    <p class="panel-body">
+      Possession follows the power play, which is a sanity check on the whole
+      pipeline: the team with the extra skater holds the puck far more often than
+      not, and the short-handed side is well under half.
+    </p>
+    <p class="panel-body">
+      Five on five sits near even, because it is the state both teams spend most
+      of the game in.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">Still to come</div>
+    <p class="panel-body">
+      <strong>Score state</strong> needs the goals from the event file joined to
+      the tracking windows. The cleaning script already builds those windows, so
+      this page gains a score panel as soon as the tables are in the database.
+    </p>
+    <p class="panel-body">
+      <strong>Per player splits</strong> by situation are the same join one
+      level down, and worth having: a defender's possession share at 5v5 and on
+      the penalty kill are different jobs.
+    </p>
+  </section>
+</div>
+{% endblock %}

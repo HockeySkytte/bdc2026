@@ -1,0 +1,16 @@
+{# The page links.
+
+   Rendered twice: once as the tab strip on a wide screen, and once inside the
+   mobile menu.  Both mark the current page with `active`, and the stylesheet
+   decides what that looks like in each place. #}
+{% set pages = [
+     ("overview",     "Overview",   "overview"),
+     ("possession",   "Possession", "possession"),
+     ("pressure",     "Pressure",   "pressure"),
+     ("space",        "Space",      "space"),
+     ("situations",   "Situations", "situations"),
+     ("data_page",    "Data &amp; Method", "data"),
+   ] %}
+{% for endpoint, label, tab in pages %}
+<a href="{{ url_for(endpoint) }}"{% if active_tab == tab %} class="active"{% endif %}>{{ label }}</a>
+{% endfor %}

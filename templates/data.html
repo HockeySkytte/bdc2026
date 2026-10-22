@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Data &amp; Method &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Data &amp; Method</div>
+    <div class="page-sub">What happens to the raw tracking files, in nine steps</div>
+  </div>
+</div>
+
+<ol class="steps">
+  <li>
+    <div class="step-title"><span class="step-num">1</span>Load the file</div>
+    <p class="step-body">
+      One CSV per period, loaded straight into a table with every column as text.
+      The periods present in the drop are the periods that get loaded; some games
+      are missing part of the third and the whole of overtime.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">2</span>Unpack the image id</div>
+    <p class="step-body">
+      <code>Image Id</code> packs the game, the teams and the frame into one
+      string: <code>2025-11-28 Team J @ Team K_065468</code>. The first 26
+      characters are the game id, which is also how the event file builds its
+      game id, and the last six are the frame number.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">3</span>Turn the clock into a running total</div>
+    <p class="step-body">
+      The clock counts down and restarts every period, so it is replaced with
+      <code>time_elapsed</code>: seconds since the opening faceoff. Period 2
+      starts at 1,200 and overtime at 3,600, which is the same frame the event
+      file uses, so the two can be joined on time.
+    </p>
+    <p class="step-body">
+      About one row in a thousand has no clock at all. Those rows cannot be
+      placed in time and are dropped, and the count of them is kept.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">4</span>Face the rink one way</div>
+    <p class="step-body">
+      Teams change ends between periods, so a position from period 1 and the same
+      position from period 2 are mirrored. The camera table says which team had
+      its goalie on the right in the first period, and the periods where that
+      makes the home end the wrong way are mirrored back.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">5</span>Put the puck in every row</div>
+    <p class="step-body">
+      The puck is a row like any other. Its position is joined onto every player
+      in the same frame, which is what makes the next step possible: distance to
+      the puck, by Pythagoras.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">6</span>Find who is holding it</div>
+    <p class="step-body">
+      The player nearest the puck is ranked first, and a player must also be
+      within six feet of it to be given possession. Six feet is about a stick
+      length: nearer than that and the puck is at their feet, further away and it
+      is loose.
+    </p>
+    <p class="step-body">
+      That gives <code>player_in_possession</code> and
+      <code>team_in_possession</code>, and the same ranking within a team gives
+      <code>distance_rank_team</code>.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">7</span>Name the defenders</div>
+    <p class="step-body">
+      On frames where the other team has the puck, a defender is
+      <strong>Primary</strong> if they are the nearest defender or within six
+      feet of the puck, and <strong>Secondary</strong> otherwise. It separates
+      the player actually pressuring the puck from the ones holding shape.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">8</span>Attach the state of the game</div>
+    <p class="step-body">
+      Neither file has strength or score in the tracking data, so both come from
+      the event file: the strength state and the score are turned into windows
+      with a start and an end, and each frame is matched to the window it falls
+      in.
+    </p>
+    <p class="step-body">
+      A game returns to strength states it has already been in, so the windows
+      are numbered spells rather than grouped by state. Grouping by state folds
+      every 5v5 spell into one and then most of the game carries the wrong label.
+    </p>
+  </li>
+
+  <li>
+    <div class="step-title"><span class="step-num">9</span>Index it</div>
+    <p class="step-body">
+      The table is keyed on <code>(image_id, player_id)</code>, which is one row
+      per player per frame and is unique in the data. Two secondary keys carry
+      the queries the pages make: a game plus a time range, and one player across
+      a game.
+    </p>
+  </li>
+</ol>
+
+<div class="panel">
+  <div class="panel-title">Things worth knowing before trusting a number</div>
+  <table class="table">
+    <thead>
+      <tr><th class="left">What</th><th class="left">Why it matters</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="left"><code>player_id</code> is a track, not a person</td>
+        <td class="left">
+          The tracker re-issues ids when it loses and re-acquires a player:
+          {{ "{:,}".format(meta.track_ids) }} ids for {{ meta.players }} players
+          in this game, 132 of them on the goalie alone. Anything per player
+          groups on <code>(team, jersey)</code>.
+        </td>
+      </tr>
+      <tr>
+        <td class="left">Goalies are marked <code>Go</code></td>
+        <td class="left">
+          The jersey column holds <code>Go</code> instead of a number for
+          goalies, and blanks for players whose number was not read. It is the
+          only goalie marker in the data, so it is carried into an
+          <code>is_goalie</code> column rather than cast away.
+        </td>
+      </tr>
+      <tr>
+        <td class="left">Blank and <code>n/a</code> are different things</td>
+        <td class="left">
+          Puck rows carry <code>n/a</code> in the team and id columns and blanks
+          in the coordinates. Both mean "not applicable", and both have to become
+          NULL rather than zero before the columns can be typed.
+        </td>
+      </tr>
+      <tr>
+        <td class="left">Not every player is in every frame</td>
+        <td class="left">
+          Around eight players per frame instead of ten skaters and a goalie, so
+          a count is "seen here", not "was here".
+        </td>
+      </tr>
+      <tr>
+        <td class="left">Overtime ends</td>
+        <td class="left">
+          The mirroring treats overtime like period 2. Worth confirming by eye
+          for each game, because it decides whether overtime is mirrored.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

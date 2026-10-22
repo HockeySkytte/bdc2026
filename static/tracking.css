@@ -1,0 +1,98 @@
+/* Components added for the tracking pages.
+ *
+ * styles.css is the shared design system, copied unchanged from the event app so
+ * the two sites stay identical.  Everything the tracking pages needed beyond it
+ * lives here: KPI tiles, bars, panel headings, tags and the map legend.  Same
+ * palette, same radii, same type scale - nothing here introduces a new colour
+ * except through --accent.
+ */
+
+/* ── Sidebar wordmark note ───────────────────────────────────────────────── */
+.app-note{
+  margin-top:2px; font-size:10px; font-weight:800; letter-spacing:1.6px;
+  text-transform:uppercase; color:rgba(255,255,255,0.55);
+}
+
+/* ── Panels ─────────────────────────────────────────────────────────────── */
+.panel{ margin-bottom:14px; }
+.panel:last-child{ margin-bottom:0; }
+
+.panel-title{
+  font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.58); margin-bottom:10px;
+}
+.panel-body{
+  margin:0 0 10px; font-size:13px; line-height:1.62; color:var(--text-dim);
+  max-width:74ch;
+}
+.panel-body:last-child{ margin-bottom:0; }
+
+.panel-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;
+}
+.panel-grid:last-child{ margin-bottom:0; }
+.panel-grid .panel{ margin-bottom:0; }
+
+/* ── KPI tiles ──────────────────────────────────────────────────────────── */
+.kpis{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px; margin-bottom:14px;
+}
+.kpi{
+  background:rgba(255,255,255,0.02); border:1px solid #232a3a; border-radius:14px;
+  padding:13px 15px; min-width:0;
+}
+.kpi .k{
+  font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  color:rgba(255,255,255,0.55);
+}
+.kpi .v{ font-size:27px; font-weight:900; letter-spacing:.2px; margin-top:4px; }
+.kpi .s{ font-size:11px; font-weight:600; color:var(--text-dim); margin-top:3px; }
+
+/* ── Bars ───────────────────────────────────────────────────────────────── */
+.bars{ display:flex; flex-direction:column; gap:11px; }
+.bar-row{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.bar-top{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.bar-label{ font-size:12px; font-weight:700; }
+.bar-value{ font-size:11px; font-weight:700; color:var(--text-dim); white-space:nowrap; }
+.bar-track{
+  height:8px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden;
+}
+.bar-fill{
+  height:100%; border-radius:99px; min-width:2px;
+  background:linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 50%, #000),
+    var(--accent));
+}
+
+/* ── Tags ───────────────────────────────────────────────────────────────── */
+.tag{
+  display:inline-block; padding:2px 8px; border-radius:99px; font-size:10px;
+  font-weight:800; letter-spacing:.8px; text-transform:uppercase;
+  background:rgba(255,255,255,0.08); color:var(--text-dim);
+}
+.tag-goalie{
+  background:color-mix(in srgb, var(--accent) 38%, #000); color:#fff;
+}
+
+/* ── Sidebar sample notice ──────────────────────────────────────────────── */
+.banner-note{
+  font-size:11px; line-height:1.55; font-weight:600; color:rgba(255,255,255,0.74);
+  background:rgba(255,255,255,0.06); border-radius:10px; padding:10px 12px;
+}
+
+/* ── Map legend ─────────────────────────────────────────────────────────── */
+.heat-legend{
+  display:flex; align-items:center; gap:8px; margin-top:10px;
+  font-size:11px; font-weight:700; color:var(--text-dim);
+}
+.heat-legend .heat-bar{
+  flex:0 0 120px; height:8px; border-radius:99px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.04), var(--accent));
+}
+.heat-peak{ margin-left:auto; font-weight:600; }
+
+/* ── Narrow screens ─────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .panel-grid{ grid-template-columns:1fr; }
+}
