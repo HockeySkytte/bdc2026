@@ -1,0 +1,151 @@
+/* Components for the simulation page.  Everything else comes from styles.css and
+   tracking.css, so this only adds the slicer stack, the transport controls, and
+   the player and puck marks drawn on the rink. */
+
+/* ── Slicer panel ───────────────────────────────────────────────────────── */
+
+.sim-slicers{ display:flex; flex-direction:column; gap:6px; }
+.sim-slicers .side-label{ margin-top:4px; }
+.sim-slicers .side-label:first-child{ margin-top:0; }
+
+/* The before and after pair.  Hidden until an event type is chosen, because a
+   full game has no window to widen. */
+.sim-window{ display:flex; gap:8px; }
+.sim-window[hidden]{ display:none; }
+.sim-window-field{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.sim-window-field .side-select{ padding-right:12px; }
+
+/* "Seconds before" wraps to two lines and "seconds after" does not, which left
+   the two inputs at different heights.  Reserving two lines in both keeps the
+   pair level whatever the label says. */
+.sim-window-field .side-label{ min-height:2.4em; line-height:1.2; }
+
+/* ── Transport ──────────────────────────────────────────────────────────── */
+
+.sim-controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.sim-button{
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.22);
+  background:var(--accent);
+  color:#fff;
+  font-family:inherit;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  padding:10px 18px;
+  cursor:pointer;
+  min-width:92px;
+}
+.sim-button:hover{ filter:brightness(1.08); }
+.sim-button:active{ transform:translateY(1px); }
+
+.sim-button-ghost{
+  background:var(--panel-alt);
+  color:var(--text);
+  min-width:0;
+}
+
+.sim-speed{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+}
+.sim-speed .side-select{ width:auto; padding:7px 28px 7px 10px; }
+
+.sim-clock{
+  margin-left:auto;
+  font-variant-numeric:tabular-nums;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+/* ── Progress ───────────────────────────────────────────────────────────── */
+
+.sim-progress{ margin-top:10px; display:flex; flex-direction:column; gap:9px; }
+
+.sim-status{
+  font-size:11px;
+  font-weight:700;
+  color:var(--text-dim);
+  min-height:15px;
+}
+
+/* ── Legend ─────────────────────────────────────────────────────────────── */
+
+.sim-legend{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:10px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--text-dim);
+  flex-wrap:wrap;
+}
+.sim-legend span{ display:flex; align-items:center; gap:6px; }
+.sim-legend-note{ margin-left:auto; font-weight:600; }
+
+.sim-dot{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  display:inline-block;
+  flex:0 0 auto;
+}
+.sim-dot-home{ background:#3b82f6; }
+.sim-dot-away{ background:#ef4444; }
+.sim-dot-puck{ background:#101418; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,0.85); }
+
+/* ── Marks on the rink ──────────────────────────────────────────────────── */
+
+/* One SVG unit is one foot.  The circles are 3.4 units across so they stay
+   readable on a phone without hiding the ice underneath them. */
+.sim-player{
+  stroke:rgba(0,0,0,0.55);
+  stroke-width:0.35;
+}
+.sim-home{ fill:#3b82f6; }
+.sim-away{ fill:#ef4444; }
+
+/* The player holding the puck gets a black ring instead of a light one, so it
+   reads against both team colours. */
+.sim-player.has-puck{
+  stroke:#0b0f14;
+  stroke-width:1.1;
+}
+
+.sim-jersey{
+  fill:#fff;
+  font-size:3.1px;
+  font-weight:800;
+  font-family:Inter,system-ui,sans-serif;
+  pointer-events:none;
+  letter-spacing:-0.1px;
+}
+
+/* The puck is deliberately bigger than a real one: at 0.5 units it disappears
+   into the ice.  The white ring is what makes it findable at a glance. */
+.sim-puck{
+  fill:#0b0f14;
+  stroke:#fff;
+  stroke-width:0.45;
+}
+
+@media (max-width: 640px){
+  .sim-clock{ margin-left:0; width:100%; }
+  .sim-button{ flex:1 1 0; }
+}

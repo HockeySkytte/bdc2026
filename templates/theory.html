@@ -1,0 +1,222 @@
+{# The theory behind the project, in the author's words.
+
+   Nothing here is written by the site: the prose, the metric names and their
+   definitions are the author's text.  The only edits are three typos and the
+   dash convention the rest of the site uses. #}
+{% extends "base.html" %}
+{% block title %}Theory &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='theory.css') }}?v=1" />
+{% endblock %}
+
+{% block sidebar %}
+<label class="side-label">Contents</label>
+<div class="theory-toc">
+  <a href="#analytics">Analytics Perspective</a>
+  <a href="#coaching">Coaching Perspective</a>
+  <a href="#defenders">Primary and Secondary defenders</a>
+  <a href="#times">Analysis through times and distances</a>
+  <a href="#time-metrics">Time metrics</a>
+  <a href="#distance-metrics">Distance metrics</a>
+  <a href="#event-metrics">Event metrics</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Theory</div>
+  </div>
+</div>
+
+{# No panel around the text: the prose reads cleaner straight on the page,
+   without a border competing with it. #}
+<div class="theory-body">
+    <p>
+      Measuring defensive impact through events is difficult, because the most
+      impactful defense results in events not happening. For instance passes not
+      completed or not even attempted. Good defense is typically shown in the lag
+      of dangerous plays against.
+    </p>
+
+    <h2 class="theory-h" id="analytics">Analytics Perspective</h2>
+    <p>
+      In analytics you will typically define defense as the ability to prevent
+      shots and chances against. Statistically, this makes perfect sense and it's
+      very easy to define and interpret. However, you can prevent shots against in
+      many different ways. You can excel at playing without the puck or you can
+      excel at keeping the puck for long periods of time. Possessing the puck in
+      the offensive zone while playing with low risk is a great way to prevent
+      chances against.
+    </p>
+    <p>
+      Quite often you will see 3rd and 4th liners top the defensive metrics,
+      because they excel at low risk cycling the puck in the offensive end.
+    </p>
+    <p>
+      This isn't necessarily a wrong definition of defense - It's just different
+      from how most coaches and players define defense.
+    </p>
+
+    <h2 class="theory-h" id="coaching">Coaching Perspective</h2>
+    <p>
+      Most coaches and players will define defense as what you do when the
+      opposing team has possession of the puck. Likewise, offense is what you do
+      when your team is in possession of the puck. At least this has always been
+      my way of thinking about offense vs. defense.
+    </p>
+    <p>
+      This is a different perspective than the analytical one, since we're now
+      focusing only on the time where the opponent team has the puck.
+    </p>
+    <p>
+      The difference of definitions can lead to misunderstandings. If a coach
+      thinks a defense metric means one thing, but in reality it means something
+      else then it can cause problems. This is also why a defense metric
+      leaderboard might not show what you expect from the eye test.
+    </p>
+
+    <h2 class="theory-h" id="defenders">Primary and Secondary defenders</h2>
+    <p>
+      In this project the focus will be on the coaching perspective. How impactful
+      are the players when playing without the puck in their own zone. To do this
+      we will use the Big Data Cup 2026 tracking data to define some new defensive
+      metrics, but first we need to define the concepts of primary and secondary
+      defenders.
+    </p>
+    <p>
+      In this project I'm defining the primary defender(s) as the defending player
+      closest to the puck or any defending players within 6 feet of the puck. This
+      means that you can have more than one primary defender, but there's typically
+      just one primary defender. The other defending players are then categorized
+      as secondary defenders.
+    </p>
+    <p>
+      Being a good primary defender is often what you see and what shows up in
+      event data - Winning puck battles, blocking shots, preventing zone entries
+      etc.
+    </p>
+    <p>
+      Good secondary defense rarely shows up in the spreadsheet or gets noticed at
+      all. Good secondary defense is preventing plays from happening at all (pass
+      interceptions being the exception). In other words, it shows up as the lack
+      of dangerous plays.
+    </p>
+    <p>
+      Since you typically have one primary defender and four secondary defenders,
+      it's fair to say that good secondary defense is much more important than good
+      primary defense. This also illustrates the issue of relying solely on micro
+      statistics to measure defensive impact - Most good defensive plays don't show
+      up in the event data.
+    </p>
+    <p>
+      We understand that defensive events like shot blocks and even takeaways are a
+      pretty bad measurement for defensive impact. That's why we often rely on
+      macro statistics like xGA to estimate defensive impact. Here we will try and
+      take a different approach than looking at events or even macro statistics.
+    </p>
+
+    <h2 class="theory-h" id="times">Analysis through times and distances</h2>
+    <p>
+      Much of the analysis in this project will revolve around time measurements
+      and distances, so let's define some new defensive metrics.
+    </p>
+
+    <h2 class="theory-h" id="time-metrics">Time metrics</h2>
+    <div class="theory-metric">
+      <div class="theory-name">Time_dz_primary</div>
+      <p>
+        Time playing as the primary defender in the defensive zone. This is both a
+        measurement of the player's skills as primary and secondary defender. If
+        you're a good and aggressive primary defender you can quickly force the
+        puck carrier to play the puck or even force a turnover. If you're a good
+        secondary defender you will rarely become the primary defender in the first
+        place because your coverage is great.
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Time_dz_def</div>
+      <p>
+        The total time playing defense in the defensive zone. This is more of a
+        team/macro statistic.
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Percentage_primary</div>
+      <p>
+        What percentage of the total defensive time does the player spend as the
+        primary defender? You would expect the best defenders to play the least as
+        primary defenders. Firstly, because they are aggressive as primary
+        defenders. Secondly, because they provide good coverage as secondary
+        defenders. Lastly, because the opposing team (consciously or
+        unconsciously) will play away from the best defenders.
+      </p>
+    </div>
+
+    <h2 class="theory-h" id="distance-metrics">Distance metrics</h2>
+    <div class="theory-metric">
+      <div class="theory-name">Dist_net_dz_def</div>
+      <p>
+        The average player distance to the net when playing defense in the
+        defensive zone. This can tell something about how passive/compact vs.
+        aggressive the defense is. The closer the players are to their own net the
+        more passive the defensive structure is.
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Dist_net_primary</div>
+      <p>
+        The average player distance to the net when playing as the primary defender
+        in your own zone. This tells us two things - How aggressive is the player
+        and how good is the player at keeping the play to the outside (away from
+        the slot)?
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Puck_dist_net_primary</div>
+      <p>
+        The average puck distance to the net while playing as the primary defender.
+        This is just a cleaner measurement of the above. We're now looking at puck
+        placement instead of player placement.
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Dist_puck_primary</div>
+      <p>
+        How close is the primary defender to the puck - How aggressive is the
+        primary defender?
+      </p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Dist_puck_secondary</div>
+      <p>
+        How close is the puck when playing as a secondary defender. Generally, it's
+        a good sign if the puck is far away from you, but it could also be a sign
+        of forwards not helping out deep enough in the zone.
+      </p>
+    </div>
+
+    <h2 class="theory-h" id="event-metrics">Event metrics</h2>
+    <p>
+      Lastly, we can look specifically at the shots that happen while the player is
+      the primary defender - Responsible for the puck carrier.
+    </p>
+    <div class="theory-metric">
+      <div class="theory-name">Blocked_primary</div>
+      <p>The number of blocked shots while the player is the primary defender.</p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Missed_primary</div>
+      <p>The number of missed shots while the player is the primary defender.</p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">On_net_primary</div>
+      <p>The number of shots on net while the player is the primary defender.</p>
+    </div>
+    <div class="theory-metric">
+      <div class="theory-name">Goal_primary</div>
+      <p>The number of goals while the player is the primary defender.</p>
+    </div>
+</div>
+{% endblock %}

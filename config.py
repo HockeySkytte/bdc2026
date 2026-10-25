@@ -54,9 +54,11 @@ class Config:
         default_factory=lambda: BASE_DIR.parent / "data" / "bigdata_cup_2026"
     )
 
-    # ── Supabase (not used yet) ──
-    #: Read from the environment so the names are settled, but nothing connects
-    #: until the data layer is switched over.
+    # ── Supabase ──
+    #: The connection string the simulation reads frames from.  Empty locally is
+    #: not an error until a page asks for frames: the aggregate pages still work
+    #: from the sample JSON without a database.
+    database_url: str = ""
     supabase_url: str = ""
     supabase_key: str = ""
 
@@ -84,4 +86,8 @@ def load_config() -> Config:
         ),
         supabase_url=os.environ.get("SUPABASE_URL", ""),
         supabase_key=os.environ.get("SUPABASE_KEY", ""),
+        database_url=(
+            os.environ.get("DATABASE_URL", "")
+            or os.environ.get("RENDER_DATABASE_URL", "")
+        ).strip(),
     )

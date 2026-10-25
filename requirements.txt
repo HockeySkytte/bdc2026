@@ -1,2 +1,8 @@
 Flask>=3.0,<4
 gunicorn>=22,<26
+# The simulation reads frames on demand, so the deployed app needs a driver.
+psycopg[binary]>=3.2
+# Colours the SQL and Python on the Data page, server side: no CDN, no JS.
+Pygments>=2.17
+# Optional: only used to pick up a local .env. Production sets real variables.
+python-dotenv>=1.0

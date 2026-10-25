@@ -1,0 +1,117 @@
+/* The Puck vs. Player page: 58 rink zones coloured by count, and average player
+   positions drawn on the same rink. */
+
+/* The panel title carries a mode switch on the player map, so it becomes a row. */
+.panel-title-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* ── Zones ──────────────────────────────────────────────────────────────── */
+
+/* The fill comes from the script as a presentation attribute so each zone can
+   carry its own colour.  Anything here that sets fill wins over it, which is how
+   the hover and selection states stay visible. */
+.rink-zone{
+  stroke:rgba(255,255,255,0.10);
+  stroke-width:0.12;
+  transition:stroke .12s ease;
+}
+.rink-zone.is-clickable{ cursor:pointer; }
+.rink-zone.is-clickable:hover{ stroke:rgba(255,255,255,0.85); stroke-width:0.45; }
+.rink-zone.is-selected{
+  stroke:#fff;
+  stroke-width:0.75;
+}
+
+/* ── Mode switch ────────────────────────────────────────────────────────── */
+
+.map-modes{ margin-left:auto; display:flex; gap:6px; }
+
+.map-mode{
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,0.20);
+  background:var(--panel-alt);
+  color:var(--text-dim);
+  font-family:inherit;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  padding:6px 10px;
+  cursor:pointer;
+}
+.map-mode:hover{ color:var(--text); }
+.map-mode.is-active{
+  background:var(--accent);
+  border-color:transparent;
+  color:#fff;
+}
+
+/* ── Legend under each map ──────────────────────────────────────────────── */
+
+.map-legend{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--text-dim);
+  flex-wrap:wrap;
+}
+.map-peak{ margin-left:auto; font-weight:600; }
+
+.map-chips{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
+.map-chip{
+  border-radius:9px;
+  border:1px solid rgba(255,255,255,0.22);
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.4px;
+  padding:3px 8px;
+}
+
+.map-clear{
+  margin-left:auto;
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,0.20);
+  background:var(--panel-alt);
+  color:var(--text);
+  font-family:inherit;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  padding:6px 10px;
+  cursor:pointer;
+}
+.map-clear[hidden]{ display:none; }
+.map-clear:hover{ filter:brightness(1.15); }
+
+/* ── Player marks ───────────────────────────────────────────────────────── */
+
+.player-mark{
+  fill:#3b82f6;
+  stroke:#0b0f14;
+  stroke-width:0.45;
+}
+
+.player-jersey{
+  fill:#fff;
+  font-size:3.4px;
+  font-weight:800;
+  font-family:Inter,system-ui,sans-serif;
+  letter-spacing:-0.1px;
+  pointer-events:none;
+}
+
+@media (max-width: 640px){
+  .map-modes{ margin-left:0; width:100%; }
+  .map-mode{ flex:1 1 0; }
+}

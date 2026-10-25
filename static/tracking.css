@@ -96,3 +96,18 @@
 @media (max-width:900px){
   .panel-grid{ grid-template-columns:1fr; }
 }
+
+/* The Reset link borrows the select styling, but it is not a dropdown: as an
+   <a> it is inline, so the select's width did not apply and it drew the select's
+   arrow.  This makes it a full width button with no arrow, on every page. */
+.side-select.slicer-reset{
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  background-image:none;
+  padding:9px 12px;
+  text-align:center;
+  font-weight:900;
+}

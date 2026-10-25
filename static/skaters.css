@@ -1,0 +1,75 @@
+/* The player card, following the component in the main Moncton app: a three
+   column flow where each metric is a label, a value and a percentile bar. */
+
+.sk-category-grid{
+  column-count:3;
+  column-gap:30px;
+}
+
+.sk-overview-block{
+  break-inside:avoid;
+  padding:2px 0 0;
+}
+
+.sk-overview-title{
+  margin:0 0 12px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.85);
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  color:#fff;
+}
+
+.sk-metric-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:22px;
+}
+
+.sk-metric-row{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.sk-metric-hdr{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  font-size:12px;
+  font-weight:800;
+  color:#fff;
+}
+.sk-metric-hdr span:last-child{
+  color:var(--text-dim);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.sk-bar-track{
+  height:10px;
+  border-radius:999px;
+  background:#1a2230;
+  overflow:hidden;
+}
+
+.sk-bar{
+  height:100%;
+  border-radius:999px;
+  min-width:2px;
+}
+
+.note{
+  margin-top:6px;
+  font-size:11px;
+  line-height:1.6;
+  color:var(--text-dim);
+  max-width:90ch;
+}
+
+@media (max-width: 1100px){ .sk-category-grid{ column-count:2; } }
+@media (max-width: 720px){ .sk-category-grid{ column-count:1; } }

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Simulation &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='simulation.css') }}?v=2" />
+<script src="{{ url_for('static', filename='simulation.js') }}?v=2" defer></script>
+{% endblock %}
+
+{# The slicer panel. Every control writes into the query string the page's
+   script sends, so a filter change is a new plan rather than a page reload. #}
+{% block sidebar %}
+<form class="sim-slicers" id="simSlicers" autocomplete="off"
+      data-chunk-seconds="{{ chunk_seconds }}" data-fps="{{ fps }}">
+  <label class="side-label" for="fGame">Game</label>
+  <select class="side-select" name="game" id="fGame">
+    {% for game in options.games %}
+    <option value="{{ game }}"{% if loop.first %} selected{% endif %}>{{ game }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fStrength">Strength state</label>
+  <select class="side-select" name="strength" id="fStrength">
+    <option value="">All</option>
+    {% for value in options.strengths %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fScore">Score state</label>
+  <select class="side-select" name="score" id="fScore">
+    <option value="">All</option>
+    {% for value in options.scores %}
+    <option value="{{ value }}">{{ "%+d"|format(value) }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fTeam">Team</label>
+  <select class="side-select" name="team" id="fTeam">
+    <option value="">All</option>
+    {% for value in options.teams %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fPlayerId">Player</label>
+  <select class="side-select" name="player_id" id="fPlayerId">
+    <option value="">All</option>
+    {% for player in options.players %}
+    <option value="{{ player.player_id }}">#{{ player.jersey }} &middot; {{ player.team }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fJersey">Jersey</label>
+  <select class="side-select" name="jersey" id="fJersey">
+    <option value="">All</option>
+    {% for value in options.jerseys %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fPosition">Position</label>
+  <select class="side-select" name="position" id="fPosition">
+    <option value="">All</option>
+    {% for value in options.positions %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fSide">Side</label>
+  <select class="side-select" name="side" id="fSide">
+    <option value="">All</option>
+    {% for value in options.sides %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="fEvent">Event</label>
+  <select class="side-select" name="event" id="fEvent">
+    <option value="">Full game</option>
+    {% for value in options.events %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  {# Only an event has a before and an after. The script hides this row when the
+     event select is back on Full game. #}
+  <div class="sim-window" id="simWindow" hidden>
+    <div class="sim-window-field">
+      <label class="side-label" for="fBefore">Seconds before</label>
+      <input class="side-select" type="number" name="before" id="fBefore"
+             min="0" max="60" step="1" value="3" />
+    </div>
+    <div class="sim-window-field">
+      <label class="side-label" for="fAfter">Seconds after</label>
+      <input class="side-select" type="number" name="after" id="fAfter"
+             min="0" max="60" step="1" value="3" />
+    </div>
+  </div>
+
+  <a class="side-select slicer-reset" href="{{ url_for('simulation') }}">Reset</a>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Simulation</div>
+    <div class="page-sub" id="simSub">Every tracked frame of the selected game</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title" id="simTitle">Rink</div>
+
+  {# The player list for the menus, so choosing a game can narrow them to the two
+     teams that played it.  The selects are rendered by the server as well, so
+     the panel is not empty before the script runs. #}
+  <script type="application/json" id="simPlayerData">{{ options.players|tojson }}</script>
+
+  <div class="rink-wrap">
+    <svg class="rink-svg" id="simRink" viewBox="0 0 200 85" role="img"
+         aria-label="Tracked players and the puck">
+      <image href="{{ url_for('static', filename='hockeyrink.png') }}"
+             x="0" y="0" width="200" height="85" />
+      {# Players first, puck last: in SVG the later element is drawn on top, and
+         the puck should not be hidden by a player standing over it. #}
+      <g id="simPlayerLayer"></g>
+      <g id="simPuckLayer"></g>
+    </svg>
+  </div>
+
+  <div class="sim-controls">
+    <button class="sim-button" id="simPlay" type="button">Play</button>
+    <button class="sim-button sim-button-ghost" id="simRestart" type="button">Restart</button>
+
+    <label class="sim-speed">
+      <span>Speed</span>
+      <select class="side-select" id="simSpeed">
+        <option value="0.25">0.25&times;</option>
+        <option value="0.5">0.5&times;</option>
+        <option value="1" selected>1&times;</option>
+        <option value="2">2&times;</option>
+        <option value="4">4&times;</option>
+      </select>
+    </label>
+
+    <div class="sim-clock" id="simClock">&mdash;</div>
+  </div>
+
+  <div class="sim-progress">
+    <div class="bar-track"><div class="bar-fill" id="simBar" style="width:0%"></div></div>
+    <div class="sim-status" id="simStatus">Loading the plan&hellip;</div>
+  </div>
+
+  <div class="sim-legend">
+    <span><i class="sim-dot sim-dot-home"></i> home</span>
+    <span><i class="sim-dot sim-dot-away"></i> away</span>
+    <span><i class="sim-dot sim-dot-puck"></i> puck</span>
+    <span class="sim-legend-note" id="simLegendNote"></span>
+  </div>
+</div>
+{% endblock %}

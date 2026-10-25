@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Puck vs. Player &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='puck_player.css') }}?v=4" />
+<script src="{{ url_for('static', filename='puck_player.js') }}?v=6" defer></script>
+{% endblock %}
+
+{% block sidebar %}
+<form class="sim-slicers" id="zoneSlicers" autocomplete="off"
+      data-accent="{{ accent }}">
+  <label class="side-label" for="zTeam">Team</label>
+  <select class="side-select" name="team" id="zTeam">
+    {% for team in options.teams %}
+    <option value="{{ team }}">{{ team }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zGame">Game</label>
+  <select class="side-select" name="game" id="zGame">
+    {% for game in options.games %}
+    <option value="{{ game }}"{% if loop.first %} selected{% endif %}>{{ game }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zJersey">Jersey</label>
+  <select class="side-select" name="jersey" id="zJersey">
+    <option value="">All players</option>
+  </select>
+
+  <label class="side-label" for="zPosition">Position</label>
+  <select class="side-select" name="position" id="zPosition">
+    <option value="">All</option>
+    {% for value in options.positions %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zSide">Side</label>
+  <select class="side-select" name="side" id="zSide">
+    <option value="">All</option>
+    {% for value in options.sides %}
+    <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zStrength">Strength state</label>
+  <select class="side-select" name="strength" id="zStrength">
+    <option value="">All</option>
+    {% for value in options.strengths %}
+    <option value="{{ value }}"{% if value == "5v5" %} selected{% endif %}>{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zScore">Score state</label>
+  <select class="side-select" name="score" id="zScore">
+    <option value="">All</option>
+    {% for value in options.scores %}
+    <option value="{{ value }}">{{ "%+d"|format(value) }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="side-label" for="zPossession">Team in possession</label>
+  <select class="side-select" name="possession" id="zPossession">
+    <option value="">All</option>
+    <option value="team">{{ options.teams[0] }} has the puck</option>
+    <option value="opponent">Opponent has the puck</option>
+    <option value="none">Loose puck</option>
+  </select>
+
+  <label class="side-label" for="zPlayerPossession">Player in possession</label>
+  <select class="side-select" name="player_possession" id="zPlayerPossession">
+    <option value="">All</option>
+    <option value="yes">Has the puck</option>
+  </select>
+
+  <a class="side-select slicer-reset" href="{{ url_for('puck_player') }}">Reset</a>
+</form>
+
+{# The slicers cascade from the top down: the team decides which games are
+   offered, and the game decides which jerseys.  Both maps are small enough to
+   send with the page rather than ask for on every change. #}
+<script type="application/json" id="zonePlayerData">{{ options.players|tojson }}</script>
+<script type="application/json" id="zoneGamesByTeam">{{ options.games_by_team|tojson }}</script>
+<script type="application/json" id="zonePlayersByGame">{{ options.players_by_game|tojson }}</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Puck vs. Player</div>
+    <div class="page-sub" id="zoneSub">Loading&hellip;</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title panel-title-row">
+    <span>Puck position</span>
+    {# One click for a whole third.  The three parts of the rink are what people
+       actually ask about, and picking 26 boxes by hand to say "offensive zone"
+       is not a thing anyone should do. #}
+    <span class="map-modes" role="group" aria-label="Select a third of the rink">
+      <button type="button" class="map-mode map-part" data-part="D">Defensive</button>
+      <button type="button" class="map-mode map-part" data-part="N">Neutral</button>
+      <button type="button" class="map-mode map-part" data-part="O">Offensive</button>
+    </span>
+  </div>
+  <div class="rink-wrap">
+    <div class="rink-zone-labels">
+      <span class="rz-dz">Defensive</span>
+      <span class="rz-nz">Neutral</span>
+      <span class="rz-oz">Offensive</span>
+    </div>
+    <svg class="rink-svg" id="puckMap" viewBox="0 0 200 85" role="img"
+         aria-label="Frames per rink zone by puck position">
+      <image href="{{ url_for('static', filename='hockeyrink.png') }}"
+             x="0" y="0" width="200" height="85" />
+      <g id="puckZones"></g>
+    </svg>
+  </div>
+  <div class="map-legend">
+    <span>fewer</span><span class="heat-bar"></span><span>more</span>
+    <span class="map-peak" id="puckPeak"></span>
+  </div>
+  <p class="note" id="puckNote">
+    One count per frame, not per player row. Click a third to keep it, or single
+    boxes to build your own selection; the map below follows either way.
+  </p>
+</div>
+
+<div class="panel">
+  <div class="panel-title panel-title-row">
+    <span id="playerTitle">Player positions</span>
+    <span class="map-modes" role="group" aria-label="How to draw player positions">
+      <button type="button" class="map-mode is-active" data-mode="positions">Average position</button>
+      <button type="button" class="map-mode" data-mode="heat">Heat map</button>
+    </span>
+  </div>
+
+  <div class="rink-wrap">
+    <svg class="rink-svg" id="playerMap" viewBox="0 0 200 85" role="img"
+         aria-label="Where the selected team's players were">
+      <image href="{{ url_for('static', filename='hockeyrink.png') }}"
+             x="0" y="0" width="200" height="85" />
+      <g id="playerZones"></g>
+      <g id="playerDots"></g>
+    </svg>
+  </div>
+
+  <div class="map-legend">
+    <span class="map-chips" id="zoneChips"></span>
+    <button type="button" class="map-clear" id="clearZones" hidden>Clear zones</button>
+  </div>
+
+  <p class="note" id="playerNote"></p>
+</div>
+{% endblock %}

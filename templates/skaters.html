@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Skaters &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='skaters.css') }}?v=2" />
+{% endblock %}
+
+{% block sidebar %}
+<form class="sim-slicers" id="skaterForm" method="get" action="{{ url_for('skaters') }}">
+  <label class="side-label" for="sPlayer">Player</label>
+  <select class="side-select" name="player" id="sPlayer" onchange="this.form.submit()">
+    {% for choice in data.choices %}
+    <option value="{{ choice.player_id }}"
+      {% if data.selected and choice.player_id == data.selected.player_id %}selected{% endif %}>
+      {{ choice.label }}
+    </option>
+    {% endfor %}
+  </select>
+  <label class="side-label" for="sMode">Totals or rates</label>
+  <select class="side-select" name="mode" id="sMode" onchange="this.form.submit()">
+    <option value="totals"{% if data.mode != "rates" %} selected{% endif %}>Totals</option>
+    <option value="rates"{% if data.mode == "rates" %} selected{% endif %}>Per 60</option>
+  </select>
+
+  <noscript><button class="side-select slicer-reset" type="submit">Show</button></noscript>
+</form>
+
+{% if data.selected %}
+<div class="side-divider"></div>
+<label class="side-label">Percentiles against</label>
+<div class="side-facts">
+  <div class="side-fact stack"><span class="k">Group</span><span class="v">{{ data.group_name }}</span></div>
+  <div class="side-fact"><span class="k">Players</span><span class="v">{{ data.peers }}</span></div>
+  <div class="side-fact"><span class="k">Minimum</span><span class="v">{{ data.minimum }} s tracked</span></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-hdr">
+  <div>
+    <div class="page-title">Skaters</div>
+    {% if data.selected %}
+    <div class="page-sub">
+      #{{ data.selected.player_jersey }} &middot; {{ data.selected.team }}
+      {%- if data.selected.player_position %} &middot; {{ data.selected.player_position }}{% endif %}
+      &middot; percentile against {{ data.peers }} {{ data.group_name }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if not data.selected %}
+<div class="panel">
+  <p class="panel-body">No player has {{ data.minimum }} seconds of tracked time.</p>
+</div>
+{% else %}
+<div class="sk-category-grid">
+  {% for sec in data.sections %}
+  <section class="sk-overview-block" data-category="{{ sec.category }}">
+    <h3 class="sk-overview-title">{{ sec.category }}</h3>
+    <div class="sk-metric-list">
+      {% for m in sec.metrics %}
+      <div class="sk-metric-row" data-metric="{{ m.metric }}">
+        <div class="sk-metric-hdr"><span>{{ m.name }}</span><span>{{ m.display }}</span></div>
+        <div class="sk-bar-track"><div class="sk-bar" style="width:{{ m.pct }}%;background:{{ m.color }};"></div></div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+
+<p class="note">
+  The length and colour of each bar is the player's percentile among
+  {{ data.group_name }} with at least {{ data.minimum }} seconds of tracked time:
+  red is the low end, white the middle, blue the top. Metrics where less is
+  better are flipped first, so a long blue bar is always a good one. 5v5 only.
+  {% if data.mode == "rates" %}
+  Rates are per 60 minutes of tracked time. Counts and zone times are divided by
+  the player's own tracked time, because a player who skates twice as much will
+  always accumulate twice as much of both - that is ice time talking, not
+  defending. Tracked time itself, the distances and the percentages are left
+  alone.
+  {% endif %}
+</p>
+{% endif %}
+{% endblock %}

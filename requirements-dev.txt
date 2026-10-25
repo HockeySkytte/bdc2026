@@ -1,6 +1,14 @@
-# Only needed to regenerate the sample summary: build_sample.py reads the raw
-# tracking files with pandas.  The site itself does not import either package, so
-# these are kept out of requirements.txt and never installed on a deploy.
+# Only needed to rebuild the sample summary or to reload Supabase.  The site
+# itself imports none of these, so they stay out of requirements.txt and are
+# never installed on a deploy.
 -r requirements.txt
-pandas>=2.2,<4
+pandas>=2.2
 numpy>=1.26
+
+# load_supabase.py: MySQL as the source, Supabase as the destination.  The copy
+# itself is scripts/reload_supabase_table_from_mysql.py in the parent repo, which
+# reads MySQL through SQLAlchemy.
+PyMySQL>=1.1
+SQLAlchemy>=2.0
+psycopg[binary]>=3.2
+python-dotenv>=1.0

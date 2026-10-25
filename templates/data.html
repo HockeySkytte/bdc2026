@@ -1,13 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Data &amp; Method &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+{% block title %}Data and Method &middot; {{ config.app_title_top }} {{ config.app_title_bottom }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='data.css') }}?v=4" />
+{% if tab in ("cleaning", "supabase") %}
+{# The palette for the code, scoped to .code by data_content.style_defs. #}
+<style>{{ code_css | safe }}</style>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<label class="side-label">On this page</label>
+<div class="theory-toc">
+  {% for key, label in tabs %}
+  <a href="{{ url_for('data_page', tab=key) }}"{% if tab == key %} class="is-current"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</div>
+{% if tab == "cleaning" %}
+<div class="side-divider"></div>
+<div class="side-facts">
+  <div class="side-fact"><span class="k">Lines</span><span class="v">{{ cleaning_lines }}</span></div>
+  <div class="side-fact stack"><span class="k">File</span><span class="v">data_cleaning.sql</span></div>
+</div>
+{% elif tab == "supabase" %}
+<div class="side-divider"></div>
+<div class="side-facts">
+  <div class="side-fact"><span class="k">Lines</span><span class="v">{{ loader_lines }}</span></div>
+  <div class="side-fact stack"><span class="k">File</span><span class="v">load_supabase.py</span></div>
+</div>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="page-hdr">
   <div>
-    <div class="page-title">Data &amp; Method</div>
-    <div class="page-sub">What happens to the raw tracking files, in nine steps</div>
+    <div class="page-title">Data and Method</div>
+    <div class="page-sub">
+      {% if tab == "cleaning" %}What the cleaning script does, and the script itself
+      {% elif tab == "supabase" %}How the tables reach Supabase, and the loader that puts them there
+      {% else %}What happens to the raw files, and what to be careful about afterwards{% endif %}
+    </div>
   </div>
 </div>
+
+<div class="data-tabs">
+  {% for key, label in tabs %}
+  <a href="{{ url_for('data_page', tab=key) }}" class="{% if tab == key %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if tab == "method" %}
 
 <ol class="steps">
   <li>
@@ -18,149 +60,261 @@
       are missing part of the third and the whole of overtime.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">2</span>Unpack the image id</div>
     <p class="step-body">
       <code>Image Id</code> packs the game, the teams and the frame into one
       string: <code>2025-11-28 Team J @ Team K_065468</code>. The first 26
-      characters are the game id, which is also how the event file builds its
-      game id, and the last six are the frame number.
+      characters are the game id, and the last six are the frame number.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">3</span>Turn the clock into a running total</div>
     <p class="step-body">
       The clock counts down and restarts every period, so it is replaced with
-      <code>time_elapsed</code>: seconds since the opening faceoff. Period 2
-      starts at 1,200 and overtime at 3,600, which is the same frame the event
-      file uses, so the two can be joined on time.
-    </p>
-    <p class="step-body">
-      About one row in a thousand has no clock at all. Those rows cannot be
-      placed in time and are dropped, and the count of them is kept.
+      <code>time_elapsed</code>: seconds since the opening faceoff. About one row
+      in a thousand has no clock at all and is dropped, and the count is kept.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">4</span>Face the rink one way</div>
     <p class="step-body">
       Teams change ends between periods, so a position from period 1 and the same
       position from period 2 are mirrored. The camera table says which team had
-      its goalie on the right in the first period, and the periods where that
-      makes the home end the wrong way are mirrored back.
+      its goalie on the right in the first period, and the periods that leave the
+      home end the wrong way are rotated 180 degrees - both axes, so a player
+      keeps their own side of the ice.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">5</span>Put the puck in every row</div>
     <p class="step-body">
       The puck is a row like any other. Its position is joined onto every player
-      in the same frame, which is what makes the next step possible: distance to
-      the puck, by Pythagoras.
+      in the same frame, which is what makes distance to the puck possible.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">6</span>Find who is holding it</div>
     <p class="step-body">
-      The player nearest the puck is ranked first, and a player must also be
-      within six feet of it to be given possession. Six feet is about a stick
-      length: nearer than that and the puck is at their feet, further away and it
-      is loose.
-    </p>
-    <p class="step-body">
-      That gives <code>player_in_possession</code> and
-      <code>team_in_possession</code>, and the same ranking within a team gives
-      <code>distance_rank_team</code>.
+      The player nearest the puck is ranked first, and must also be within six
+      feet of it to be given possession. Six feet is about a stick length: nearer
+      and the puck is at their feet, further and it is loose.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">7</span>Name the defenders</div>
     <p class="step-body">
       On frames where the other team has the puck, a defender is
-      <strong>Primary</strong> if they are the nearest defender or within six
-      feet of the puck, and <strong>Secondary</strong> otherwise. It separates
-      the player actually pressuring the puck from the ones holding shape.
+      <strong>Primary</strong> if they are the nearest defender or within six feet
+      of the puck, and <strong>Secondary</strong> otherwise.
     </p>
   </li>
-
   <li>
     <div class="step-title"><span class="step-num">8</span>Attach the state of the game</div>
     <p class="step-body">
-      Neither file has strength or score in the tracking data, so both come from
-      the event file: the strength state and the score are turned into windows
-      with a start and an end, and each frame is matched to the window it falls
-      in.
-    </p>
-    <p class="step-body">
-      A game returns to strength states it has already been in, so the windows
-      are numbered spells rather than grouped by state. Grouping by state folds
-      every 5v5 spell into one and then most of the game carries the wrong label.
+      Neither file carries strength or score in the tracking data, so both come
+      from the event file, turned into windows with a start and an end. A game
+      returns to states it has already been in, so the windows are numbered
+      spells rather than groups by state.
     </p>
   </li>
-
   <li>
-    <div class="step-title"><span class="step-num">9</span>Index it</div>
+    <div class="step-title"><span class="step-num">9</span>Add the lines and the zones</div>
     <p class="step-body">
-      The table is keyed on <code>(image_id, player_id)</code>, which is one row
-      per player per frame and is unique in the data. Two secondary keys carry
-      the queries the pages make: a game plus a time range, and one player across
-      a game.
+      Every position is dropped into one of the 58 zones from
+      <code>HockeyRinkZones.geojson</code>, for the player and for the puck
+      separately, and the duplicate rows left by the joins are reduced to one per
+      player per frame.
     </p>
   </li>
 </ol>
 
-<div class="panel">
-  <div class="panel-title">Things worth knowing before trusting a number</div>
-  <table class="table">
-    <thead>
-      <tr><th class="left">What</th><th class="left">Why it matters</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="left"><code>player_id</code> is a track, not a person</td>
-        <td class="left">
-          The tracker re-issues ids when it loses and re-acquires a player:
-          {{ "{:,}".format(meta.track_ids) }} ids for {{ meta.players }} players
-          in this game, 132 of them on the goalie alone. Anything per player
-          groups on <code>(team, jersey)</code>.
-        </td>
-      </tr>
-      <tr>
-        <td class="left">Goalies are marked <code>Go</code></td>
-        <td class="left">
-          The jersey column holds <code>Go</code> instead of a number for
-          goalies, and blanks for players whose number was not read. It is the
-          only goalie marker in the data, so it is carried into an
-          <code>is_goalie</code> column rather than cast away.
-        </td>
-      </tr>
-      <tr>
-        <td class="left">Blank and <code>n/a</code> are different things</td>
-        <td class="left">
-          Puck rows carry <code>n/a</code> in the team and id columns and blanks
-          in the coordinates. Both mean "not applicable", and both have to become
-          NULL rather than zero before the columns can be typed.
-        </td>
-      </tr>
-      <tr>
-        <td class="left">Not every player is in every frame</td>
-        <td class="left">
-          Around eight players per frame instead of ten skaters and a goalie, so
-          a count is "seen here", not "was here".
-        </td>
-      </tr>
-      <tr>
-        <td class="left">Overtime ends</td>
-        <td class="left">
-          The mirroring treats overtime like period 2. Worth confirming by eye
-          for each game, because it decides whether overtime is mirrored.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<h2 class="data-h">Two things to be careful with</h2>
+
+<div class="data-note">
+  <h3 class="data-h3">Overtime coordinates follow a different rule</h3>
+  <p>
+    In regulation the event file uses the same absolute rink frame as the
+    tracking: x is a place on the ice, and it flips when the teams change ends.
+    In overtime it does not. Both teams' coordinates are attack-normalised, so
+    x points at the goal the eventing team is attacking, whoever that is.
+  </p>
+  <p>
+    That is measurable rather than guesswork. Comparing every overtime event
+    against the tracked puck at the same second, the home team's event x
+    correlates -0.94 with the tracking and the away team's +0.90, and the same
+    holds for y. A mirrored team is a rotated team.
+  </p>
+  <p>
+    Two consequences. Overtime events cannot be plotted with regulation events
+    without undoing the rotation first, and the assumption of which team gets
+    rotated is only tested on the three overtime games in this drop, all of which
+    are camera-Away games. A camera-Home overtime game would settle it and there
+    is not one here.
+  </p>
 </div>
+
+<div class="data-note">
+  <h3 class="data-h3">Positions and sides are estimated, not recorded</h3>
+  <p>
+    There is no position column in the release. Forward, defence and centre are
+    inferred from where players stand at neutral zone faceoffs: the players
+    nearest their own blue line are the forwards, the two nearest their own goal
+    line are the defence, and the player on the dot is the centre. The same
+    standing positions give the side.
+  </p>
+  <p>
+    Ten games is not enough to be certain about any single player. A player who
+    took thirty neutral zone faceoffs is well evidenced; one who took four is
+    not, and a player who rarely starts a faceoff at all is guessed at from a
+    handful of frames. Take the position and the side with a grain of salt -
+    more games would make the estimate worth trusting, and this drop does not
+    have them.
+  </p>
+</div>
+
+<h2 class="data-h">Things worth knowing before trusting a number</h2>
+<table class="table table-wrap">
+  <thead>
+    <tr><th class="left">What</th><th class="left">Why it matters</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="left"><code>player_id</code> is a track, not a person</td>
+      <td class="left">
+        The tracker re-issues ids when it loses and re-acquires a player:
+        {{ "{:,}".format(meta.track_ids) }} ids for {{ meta.players }} players in
+        one game, 132 of them on the goalie alone. Anything per player groups on
+        <code>(team, jersey)</code>.
+      </td>
+    </tr>
+    <tr>
+      <td class="left">Goalies are marked <code>Go</code></td>
+      <td class="left">
+        The jersey column holds <code>Go</code> instead of a number for goalies,
+        and blanks for players whose number was not read. It is the only goalie
+        marker in the data.
+      </td>
+    </tr>
+    <tr>
+      <td class="left">Blank and <code>n/a</code> are different things</td>
+      <td class="left">
+        Puck rows carry <code>n/a</code> in the team and id columns and blanks in
+        the coordinates. Both mean not applicable, and both have to become NULL
+        before the columns can be typed.
+      </td>
+    </tr>
+    <tr>
+      <td class="left">Not every player is in every frame</td>
+      <td class="left">
+        About eight players per frame instead of ten skaters and a goalie, so a
+        count is "seen here", not "was here".
+      </td>
+    </tr>
+    <tr>
+      <td class="left">Some periods are missing</td>
+      <td class="left">
+        Part of the third period is absent in several games and period 3 is often
+        a fifth of a game. Anything summed across a game inherits that hole.
+      </td>
+    </tr>
+    <tr>
+      <td class="left">Overtime ends</td>
+      <td class="left">
+        The tracking mirror treats overtime like period 2, and the tracked puck
+        confirms it for the three overtime games here.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+{% elif tab == "cleaning" %}
+
+<p class="data-lede">
+  The whole script, in order. Every comment in it is there to be read: the
+  numbered banners are the order of work, and the notes under them say why each
+  step exists rather than what it does. It runs top to bottom and is meant to be
+  re-run from scratch.
+</p>
+
+<div class="code-block">
+  <div class="code-hdr">
+    <span>data_cleaning.sql</span>
+    <span>{{ cleaning_lines }} lines</span>
+  </div>
+  {{ cleaning_html | safe }}
+</div>
+
+{% else %}
+
+<p class="data-lede">
+  MySQL is the workshop and Supabase is the serving copy. Everything is built
+  locally, checked against the raw files, and then loaded: the site never writes
+  to the database, it only reads.
+</p>
+
+<h2 class="data-h">How the copy works</h2>
+<div class="data-note">
+  <p>
+    The loader does not implement the copy itself. It calls
+    <code>scripts/reload_supabase_table_from_mysql.py</code> in the parent repo,
+    the same script every other table in this project uses, so there is one
+    implementation of that logic rather than two. That script reads MySQL with a
+    cursor and streams the rows into Postgres with <code>COPY</code>, writing
+    values with <code>write_row</code> rather than formatting CSV, and it runs
+    with <code>prepare_threshold=None</code> so the pgbouncer pooler is happy.
+  </p>
+  <p>
+    Three things follow from the pooler and the instance size, and each of them
+    cost a failed load to find:
+  </p>
+  <ul class="data-list">
+    <li>
+      <strong>Use the session pooler, not the transaction pooler.</strong> The
+      same host serves port 6543 for transaction pooling and 5432 for sessions. A
+      COPY holds its connection for the whole transaction, and transaction mode
+      answers that with a checkout timeout after fifteen seconds. The loader
+      rewrites the port.
+    </li>
+    <li>
+      <strong>Free space before loading.</strong> Over its storage limit Supabase
+      writes <code>default_transaction_read_only = on</code> into
+      <code>postgresql.auto.conf</code>, and every write then fails with
+      <code>ReadOnlySqlTransaction</code> partway through a load.
+    </li>
+    <li>
+      <strong>Vacuum after the indexes.</strong> Building an index does not set
+      the visibility map, and an index-only scan without it still fetches from the
+      heap. On this data that was 170,000 heap fetches per query until a
+      <code>VACUUM</code> ran.
+    </li>
+  </ul>
+</div>
+
+<h2 class="data-h">What is derived in Supabase</h2>
+<div class="data-note">
+  <p>
+    Three tables are built there rather than shipped from MySQL, because they are
+    views of the tracking data for the pages rather than sources of truth:
+  </p>
+  <ul class="data-list">
+    <li><code>bdc2026_frames</code> - one row per frame, 959,007 of them, carrying what is true of the frame: the puck's zone and position, the states, who had possession. Built by <code>build_frames.py</code>.</li>
+    <li><code>bdc2026_game_players</code> - which jerseys appear in which game, 410 rows, so a game can narrow the player menu without scanning the tracking table.</li>
+    <li><code>bdc2026_rink_zones</code> - the 58 rink polygons, loaded by <code>add_boxids.py</code> with PostGIS, which is what resolves <code>boxid</code> and <code>boxid_puck</code>.</li>
+  </ul>
+  <p>
+    Derived means rebuildable: <code>build_frames.py</code> truncates and refills,
+    and nothing else depends on it.
+  </p>
+</div>
+
+<div class="code-block">
+  <div class="code-hdr">
+    <span>load_supabase.py</span>
+    <span>{{ loader_lines }} lines</span>
+  </div>
+  {{ loader_html | safe }}
+</div>
+
+{% endif %}
 {% endblock %}
