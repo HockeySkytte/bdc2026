@@ -1,7 +1,12 @@
-# Data files are written by clean_data.py and read back as data, so Git must not
-# touch them.  With core.autocrlf on - which is the Windows default - Git would
-# rewrite their line endings on the way in and out, and the committed file would
-# stop being byte-for-byte what the pipeline produced.
+﻿# Store text with LF whatever the machine. The app is deployed on Linux and the
+# SQL is pasted into MySQL Workbench, which reads either, so there is nothing to
+# gain from platform-specific line endings and a lot of noise to lose.
+* text=auto eol=lf
+
+# Data files are written by the pipeline and read back as data, so Git must not
+# touch them. With core.autocrlf on - the Windows default - Git would rewrite
+# their line endings on the way in and out, and the committed file would stop
+# being byte-for-byte what the pipeline produced.
 *.csv      -text
 *.geojson  -text
 *.json     -text
